@@ -56,11 +56,6 @@ public class InsertionSort<X extends Comparable<X>> extends SortWithHelper<X> {
      * @param to   the index of the first element not to sort
      *
      */
-    private void swap(X[] array, int a, int b) {
-        X temp = array[a];
-        array[a] = array[b];
-        array[b] = temp;
-    }
     public void sort(X[] xs, int from, int to) {
         // FIXME
         final Helper<X> helper = getHelper();

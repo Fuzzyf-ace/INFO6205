@@ -113,6 +113,7 @@ public interface Helper<X extends Comparable<X>> extends GenericHelper<X> {
      * @param i  the index of the upper element.
      * @return true if there was an inversion (i.e. the order was wrong and had to be fixed).
      */
+    //swap xs[i] and xs[i-1] if xs[i] < xs[i-1]// after swap, it's increment order
     default boolean swapStableConditional(X[] xs, int i) {
         final X v = xs[i - 1];
         final X w = xs[i];

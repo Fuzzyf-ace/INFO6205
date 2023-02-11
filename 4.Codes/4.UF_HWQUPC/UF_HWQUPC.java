@@ -176,13 +176,13 @@ public class UF_HWQUPC implements UF {
         if (height[j] <= height[i]) {
             updateParent(j, i);
             updateHeight(i, j);
-            if (pathCompression) {
+            if (pathCompression == true) {
                 doPathCompression(j);
             }
         } else if (height[j] > height[i]) {
             updateParent(i, j);
             updateHeight(j, i);
-            if (pathCompression) {
+            if (pathCompression == true) {
                 doPathCompression(i);
             }
         }

@@ -1,6 +1,7 @@
 package edu.neu.coe.info6205.sort.elementary;
 
 import java.util.Arrays;
+import java.util.Comparator;
 
 /**
  * This is a basic implementation of insertion sort.
@@ -18,6 +19,11 @@ public class InsertionSortBasic {
 
     private void swap(int i, Object[] a) {
         // FIXME
+//        for (int j = i; j > -1; j--) {
+//            if (a[j].compareTo(a[j - 1]) < 0) {
+//                swap(a, j, j - 1);
+//            }
+//        }
         // END 
     }
 

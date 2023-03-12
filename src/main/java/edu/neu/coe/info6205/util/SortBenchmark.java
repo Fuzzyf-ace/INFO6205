@@ -3,13 +3,8 @@
  */
 package edu.neu.coe.info6205.util;
 
-import edu.neu.coe.info6205.sort.BaseHelper;
-import edu.neu.coe.info6205.sort.Helper;
-import edu.neu.coe.info6205.sort.SortWithHelper;
-import edu.neu.coe.info6205.sort.elementary.BubbleSort;
-import edu.neu.coe.info6205.sort.elementary.InsertionSort;
-import edu.neu.coe.info6205.sort.elementary.RandomSort;
-import edu.neu.coe.info6205.sort.elementary.ShellSort;
+import edu.neu.coe.info6205.sort.*;
+import edu.neu.coe.info6205.sort.elementary.*;
 import edu.neu.coe.info6205.sort.linearithmic.TimSort;
 import edu.neu.coe.info6205.sort.linearithmic.*;
 
@@ -37,12 +32,55 @@ public class SortBenchmark {
 
     public static void main(String[] args) throws IOException {
         Config config = Config.load(SortBenchmark.class);
-        logger.info("SortBenchmark.main: " + config.get("SortBenchmark", "version") + " with word counts: " + Arrays.toString(args));
-        if (args.length == 0) logger.warn("No word counts specified on the command line");
-        SortBenchmark benchmark = new SortBenchmark(config);
-        benchmark.sortIntegersByShellSort(config.getInt("shellsort", "n", 100000));
-        benchmark.sortStrings(Arrays.stream(args).map(Integer::parseInt));
-        benchmark.sortLocalDateTimes(config.getInt("benchmarkdatesorters", "n", 100000), config);
+        int runs = 10;
+
+        boolean isInstrumented = config.getBoolean("helper", "instrument");
+        //merge sort
+        System.out.println("MergeSort with" + (isInstrumented ? "" : "out") + " instrumented:");
+        for (int n = 10_000; n <= 2_560_000; n *= 2) {
+            System.out.println("ArrayLength: " + n);
+            Helper<Integer> helper = HelperFactory.create("mergeSort", n, isInstrumented, config);
+            SortWithHelper<Integer> sorter = new MergeSort<>(helper);
+
+            Integer[] ts = helper.random(Integer.class, r -> r.nextInt());
+            SorterBenchmark sorterBenchmark = new SorterBenchmark(Integer.class, sorter, ts, runs, timeLoggersLinearithmic);
+            sorterBenchmark.run(n);
+            InstrumentedHelper instrumentedHelper = (InstrumentedHelper) sorter.getHelper();
+            System.out.println(instrumentedHelper.showStats());
+
+            System.out.println("number of comparisons, swaps, copies, hits: "+ instrumentedHelper.getStatPack().mean("compares") + ", " +instrumentedHelper.getStatPack().mean("swaps") +", "+ instrumentedHelper.getStatPack().mean("copies") + ", " + instrumentedHelper.getStatPack().mean("hits"));
+
+        }
+//        //quick sort
+//        System.out.println("Quick with" + (isInstrumented ? "" : "out") + " instrumented:");
+//        for (int n = 10_000; n <= 256_000; n *= 2) {
+//            Helper<Integer> helper = HelperFactory.create("quickSort", n, isInstrumented, config);
+//            SortWithHelper<Integer> sorter = new QuickSort_DualPivot<>(helper);
+//
+//            Integer[] ts = helper.random(Integer.class, r -> r.nextInt());
+//            SorterBenchmark sorterBenchmark = new SorterBenchmark(Integer.class, sorter, ts, runs, timeLoggersLinearithmic);
+//            sorterBenchmark.run(n);
+//            InstrumentedHelper instrumentedHelper = (InstrumentedHelper) sorter.getHelper();
+//
+//            System.out.println("number of comparisons, swaps, copies, hits: "+ instrumentedHelper.getStatPack().mean("compares") + ", " +instrumentedHelper.getStatPack().mean("swaps") +", "+ instrumentedHelper.getStatPack().mean("copies") + ", " + instrumentedHelper.getStatPack().mean("hits"));
+//        }
+//        //heap sort
+//        System.out.println("HeapSort with" + (isInstrumented ? "" : "out") + " instrumented:");
+//        for (int n = 10_000; n <= 256_000; n *= 2) {
+//            Helper<Integer> helper = HelperFactory.create("heapSort", n, isInstrumented, config);
+//            SortWithHelper<Integer> sorter = new HeapSort<>(helper);
+//
+//            Integer[] ts = helper.random(Integer.class, r -> r.nextInt());
+//            SorterBenchmark sorterBenchmark = new SorterBenchmark(Integer.class, sorter, ts, runs, timeLoggersLinearithmic);
+//            sorterBenchmark.run(n);
+//            InstrumentedHelper instrumentedHelper = (InstrumentedHelper) sorter.getHelper();
+//
+//            System.out.println("number of comparisons, swaps, copies, hits: "+ instrumentedHelper.getStatPack().mean("compares") + ", " +instrumentedHelper.getStatPack().mean("swaps") +", "+ instrumentedHelper.getStatPack().mean("copies") + ", " + instrumentedHelper.getStatPack().mean("hits"));
+//        }
+
+
+
+
     }
 
     public void sortLocalDateTimes(final int n, Config config) throws IOException {
@@ -99,6 +137,11 @@ public class SortBenchmark {
 
         if (isConfigBenchmarkStringSorter("quicksort"))
             runStringSortBenchmark(words, nWords, nRuns, new QuickSort_Basic<>(nWords, config), timeLoggersLinearithmic);
+
+        if (isConfigBenchmarkStringSorter("heapsort")) {
+            Helper<String> helper = HelperFactory.create("Heapsort", nWords, config);
+            runStringSortBenchmark(words, nWords, nRuns, new HeapSort<>(helper), timeLoggersLinearithmic);
+        }
 
         if (isConfigBenchmarkStringSorter("introsort"))
             runStringSortBenchmark(words, nWords, nRuns, new IntroSort<>(nWords, config), timeLoggersLinearithmic);

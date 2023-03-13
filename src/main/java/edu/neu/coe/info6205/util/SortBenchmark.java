@@ -32,54 +32,60 @@ public class SortBenchmark {
 
     public static void main(String[] args) throws IOException {
         Config config = Config.load(SortBenchmark.class);
-        int runs = 10;
+        int runs = 100;
 
         boolean isInstrumented = config.getBoolean("helper", "instrument");
+        isInstrumented = false;
         //merge sort
         System.out.println("MergeSort with" + (isInstrumented ? "" : "out") + " instrumented:");
-        for (int n = 10_000; n <= 2_560_000; n *= 2) {
+        for (int n = 10_000; n <= 320_000; n *= 2) {
             System.out.println("ArrayLength: " + n);
             Helper<Integer> helper = HelperFactory.create("mergeSort", n, isInstrumented, config);
-            SortWithHelper<Integer> sorter = new MergeSort<>(helper);
+            SortWithHelper<Integer> sorter = new MergeSortBasic<>(helper);
+            Integer[] ts = helper.random(Integer.class, r -> r.nextInt());
+            SorterBenchmark sorterBenchmark = new SorterBenchmark(Integer.class, sorter, ts, runs, timeLoggersLinearithmic);
+            sorterBenchmark.run(n);
+            if (isInstrumented) {
+                InstrumentedHelper instrumentedHelper = (InstrumentedHelper) sorter.getHelper();
+                System.out.println("number of comparisons, swaps, copies, hits: "+ instrumentedHelper.getStatPack().mean("compares") + ", " +instrumentedHelper.getStatPack().mean("swaps") +", "+ instrumentedHelper.getStatPack().mean("copies") + ", " + instrumentedHelper.getStatPack().mean("hits"));
+            }
+        }
+        System.out.println("======================================================================");
+        //quick sort
+        System.out.println("QuickSort with" + (isInstrumented ? "" : "out") + " instrumented:");
+//        for (int n = 10_000; n == 320_000; n *= 2) {
+        for (int n = 10_000; n <= 320_000; n *= 2) {
+            System.out.println("ArrayLength: " + n);
+            Helper<Integer> helper = HelperFactory.create("quickSort", n, isInstrumented, config);
+            SortWithHelper<Integer> sorter = new QuickSort_DualPivot<>(helper);
 
             Integer[] ts = helper.random(Integer.class, r -> r.nextInt());
             SorterBenchmark sorterBenchmark = new SorterBenchmark(Integer.class, sorter, ts, runs, timeLoggersLinearithmic);
             sorterBenchmark.run(n);
-            InstrumentedHelper instrumentedHelper = (InstrumentedHelper) sorter.getHelper();
-            System.out.println(instrumentedHelper.showStats());
-
-            System.out.println("number of comparisons, swaps, copies, hits: "+ instrumentedHelper.getStatPack().mean("compares") + ", " +instrumentedHelper.getStatPack().mean("swaps") +", "+ instrumentedHelper.getStatPack().mean("copies") + ", " + instrumentedHelper.getStatPack().mean("hits"));
-
+            System.out.println(sorter.getHelper().showStats());
+            if (isInstrumented) {
+                InstrumentedHelper instrumentedHelper = (InstrumentedHelper) sorter.getHelper();
+                System.out.println("number of comparisons, swaps, copies, hits: "+ instrumentedHelper.getStatPack().mean("compares") + ", " +instrumentedHelper.getStatPack().mean("swaps") +", "+ instrumentedHelper.getStatPack().mean("copies") + ", " + instrumentedHelper.getStatPack().mean("hits"));
+            }
         }
-//        //quick sort
-//        System.out.println("Quick with" + (isInstrumented ? "" : "out") + " instrumented:");
-//        for (int n = 10_000; n <= 256_000; n *= 2) {
-//            Helper<Integer> helper = HelperFactory.create("quickSort", n, isInstrumented, config);
-//            SortWithHelper<Integer> sorter = new QuickSort_DualPivot<>(helper);
-//
-//            Integer[] ts = helper.random(Integer.class, r -> r.nextInt());
-//            SorterBenchmark sorterBenchmark = new SorterBenchmark(Integer.class, sorter, ts, runs, timeLoggersLinearithmic);
-//            sorterBenchmark.run(n);
-//            InstrumentedHelper instrumentedHelper = (InstrumentedHelper) sorter.getHelper();
-//
-//            System.out.println("number of comparisons, swaps, copies, hits: "+ instrumentedHelper.getStatPack().mean("compares") + ", " +instrumentedHelper.getStatPack().mean("swaps") +", "+ instrumentedHelper.getStatPack().mean("copies") + ", " + instrumentedHelper.getStatPack().mean("hits"));
-//        }
-//        //heap sort
-//        System.out.println("HeapSort with" + (isInstrumented ? "" : "out") + " instrumented:");
-//        for (int n = 10_000; n <= 256_000; n *= 2) {
-//            Helper<Integer> helper = HelperFactory.create("heapSort", n, isInstrumented, config);
-//            SortWithHelper<Integer> sorter = new HeapSort<>(helper);
-//
-//            Integer[] ts = helper.random(Integer.class, r -> r.nextInt());
-//            SorterBenchmark sorterBenchmark = new SorterBenchmark(Integer.class, sorter, ts, runs, timeLoggersLinearithmic);
-//            sorterBenchmark.run(n);
-//            InstrumentedHelper instrumentedHelper = (InstrumentedHelper) sorter.getHelper();
-//
-//            System.out.println("number of comparisons, swaps, copies, hits: "+ instrumentedHelper.getStatPack().mean("compares") + ", " +instrumentedHelper.getStatPack().mean("swaps") +", "+ instrumentedHelper.getStatPack().mean("copies") + ", " + instrumentedHelper.getStatPack().mean("hits"));
-//        }
+        System.out.println("======================================================================");
+        //heap sort
+        System.out.println("HeapSort with" + (isInstrumented ? "" : "out") + " instrumented:");
+//        for (int n = 10_000; n == 320_000; n *= 2) {
+            for (int n = 10_000; n <= 320_000; n *= 2) {
 
+                System.out.println("ArrayLength: " + n);
+                Helper<Integer> helper = HelperFactory.create("heapSort", n, isInstrumented, config);
+                SortWithHelper<Integer> sorter = new HeapSort<>(helper);
 
-
+                Integer[] ts = helper.random(Integer.class, r -> r.nextInt());
+                SorterBenchmark sorterBenchmark = new SorterBenchmark(Integer.class, sorter, ts, runs, timeLoggersLinearithmic);
+                sorterBenchmark.run(n);
+                if (isInstrumented) {
+                    InstrumentedHelper instrumentedHelper = (InstrumentedHelper) sorter.getHelper();
+                    System.out.println("number of comparisons, swaps, copies, hits: "+ instrumentedHelper.getStatPack().mean("compares") + ", " +instrumentedHelper.getStatPack().mean("swaps") +", "+ instrumentedHelper.getStatPack().mean("copies") + ", " + instrumentedHelper.getStatPack().mean("hits"));
+                }
+            }
 
     }
 
